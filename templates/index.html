@@ -6,39 +6,28 @@
     <title>Behavior Intelligence AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .skeleton { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
-        /* Smooth transitions for responsive stacking */
-        .grid-custom { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+        .spinner { border: 4px solid rgba(79, 70, 229, 0.1); border-top: 4px solid #6366f1; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-[#0f172a] text-slate-200 font-sans min-h-screen p-4 md:p-6">
 
-    <nav class="max-w-6xl mx-auto flex justify-between items-center mb-8">
-        <div class="flex items-center gap-2"><div class="w-8 h-8 bg-indigo-500 rounded-lg"></div>
-            <span class="font-bold text-xl text-white">Behavior Intelligence AI</span>
-        </div>
-        <a href="/docs" class="text-sm text-slate-400 hover:text-white">API Docs</a>
-    </nav>
-
     <main class="max-w-6xl mx-auto space-y-6">
-        
-        <!-- Process Indicator -->
         <div class="flex justify-between items-center bg-slate-900/50 p-4 rounded-2xl border border-slate-800 text-xs text-slate-400 uppercase tracking-widest font-semibold">
             <span id="step1" class="text-indigo-400">1. Input</span>
             <span id="step2">2. Processing</span>
             <span id="step3">3. Result</span>
         </div>
 
-        <!-- Hero Output -->
-        <div id="resultCard" class="bg-slate-900 border border-slate-800 p-8 rounded-3xl min-h-[200px]">
-            <h3 class="text-slate-400 uppercase tracking-widest text-xs font-bold mb-6">Your Behavior Profile</h3>
-            <div id="result" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <p class="text-slate-500 italic">Select age and execute model to reveal archetypes.</p>
+        <div id="resultCard" class="bg-slate-900 border border-slate-800 p-8 rounded-3xl min-h-[250px] flex flex-col justify-center items-center">
+            <div id="statusDisplay" class="text-center w-full">
+                <h3 class="text-slate-400 uppercase tracking-widest text-xs font-bold mb-6">Your Behavior Profile</h3>
+                <div id="result" class="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+                    <p class="text-slate-500 italic">Select age and execute model to reveal archetypes.</p>
+                </div>
             </div>
         </div>
 
-        <!-- Responsive Grid -->
         <div class="grid md:grid-cols-3 gap-6">
             <div class="md:col-span-1 bg-slate-900 border border-slate-800 p-8 rounded-3xl">
                 <h2 class="text-white font-semibold text-lg mb-4">Choose Age</h2>
@@ -46,39 +35,51 @@
                 <input type="range" id="ageSlider" min="0" max="120" value="25" 
                        class="w-full h-2 bg-slate-700 rounded-lg cursor-pointer accent-indigo-500 mb-6" 
                        oninput="document.getElementById('ageVal').innerText = this.value + 'yrs'">
-                <button onclick="getPrediction()" class="w-full bg-white text-slate-900 font-bold py-3 rounded-xl hover:bg-indigo-400 transition">Execute</button>
-            </div>
-
-            <div class="md:col-span-2 bg-slate-800/50 border border-slate-800 p-8 rounded-3xl">
-                <h3 class="text-white font-bold mb-4">System Architecture</h3>
-                <p class="text-slate-400 text-sm leading-relaxed">Our intelligence engine utilizes real-time inference within a transient memory architecture. Zero long-term data retention, ensuring total privacy. Engineered for high-fidelity behavioral mapping.</p>
+                <button id="execBtn" onclick="getPrediction()" class="w-full bg-white text-slate-900 font-bold py-3 rounded-xl hover:bg-indigo-400 transition">Execute</button>
             </div>
         </div>
     </main>
 
     <script>
         async function getPrediction() {
-            // Update Process Indicators
+            const resultDiv = document.getElementById('result');
+            const statusDisplay = document.getElementById('statusDisplay');
+            const execBtn = document.getElementById('execBtn');
+            
+            // Set UI to loading state
+            execBtn.disabled = true;
             document.getElementById('step1').classList.remove('text-indigo-400');
             document.getElementById('step2').classList.add('text-indigo-400');
             
-            const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = '<div class="skeleton w-full h-10 bg-slate-800 rounded-lg"></div>'.repeat(4);
-            
-            const response = await fetch('/predict', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ age: parseInt(document.getElementById('ageSlider').value) })
-            });
-            const data = await response.json();
-            
-            // Finalize UI
-            document.getElementById('step2').classList.remove('text-indigo-400');
-            document.getElementById('step3').classList.add('text-indigo-400');
-            
-            resultDiv.innerHTML = data.behaviors.map(b => 
-                `<span class="bg-indigo-900/30 text-indigo-300 px-4 py-2 rounded-full text-xs border border-indigo-500/20 text-center">${b}</span>`
-            ).join('');
+            // Function to cycle text
+            const statuses = ["Analyzing parameters...", "Predicting behavior...", "Finalizing results..."];
+            let i = 0;
+            const interval = setInterval(() => {
+                statusDisplay.innerHTML = `<div class="spinner mx-auto mb-4"></div><p class="text-indigo-400 font-bold animate-pulse">${statuses[i % statuses.length]}</p>`;
+                i++;
+            }, 800);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ age: parseInt(document.getElementById('ageSlider').value) })
+                });
+                const data = await response.json();
+                
+                clearInterval(interval);
+                
+                document.getElementById('step2').classList.remove('text-indigo-400');
+                document.getElementById('step3').classList.add('text-indigo-400');
+                
+                statusDisplay.innerHTML = `<h3 class="text-slate-400 uppercase tracking-widest text-xs font-bold mb-6">Your Behavior Profile</h3>
+                                           <div class="grid grid-cols-2 md:grid-cols-4 gap-4">${data.behaviors.map(b => `<span class="bg-indigo-900/30 text-indigo-300 px-4 py-2 rounded-full text-xs border border-indigo-500/20 text-center">${b}</span>`).join('')}</div>`;
+            } catch (err) {
+                clearInterval(interval);
+                statusDisplay.innerHTML = `<p class="text-red-400">Error connecting to model.</p>`;
+            } finally {
+                execBtn.disabled = false;
+            }
         }
     </script>
 </body>

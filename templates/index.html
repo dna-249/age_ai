@@ -42,10 +42,10 @@
         <div class="grid md:grid-cols-3 gap-6">
             <div class="md:col-span-1 bg-slate-900 border border-slate-800 p-8 rounded-3xl">
                 <h2 class="text-white font-semibold text-lg mb-4">Configuration</h2>
-                <div id="ageVal" class="text-6xl font-bold text-indigo-400 mb-6">25</div>
+                <div id="ageVal" class="text-6xl font-bold text-indigo-400 mb-6">25yrs</div>
                 <input type="range" id="ageSlider" min="0" max="120" value="25" 
                        class="w-full h-2 bg-slate-700 rounded-lg cursor-pointer accent-indigo-500 mb-6" 
-                       oninput="document.getElementById('ageVal').innerText = this.value">
+                       oninput="document.getElementById('ageVal').innerText = this.value + yrs">
                 <button onclick="getPrediction()" class="w-full bg-white text-slate-900 font-bold py-3 rounded-xl hover:bg-indigo-400 transition">Execute</button>
             </div>
 
